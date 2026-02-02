@@ -19,102 +19,86 @@ async def fetch_player_wars(player: str) -> int:
 
     url = f"https://api.wynncraft.com/v3/player/{player}"
 
-    try:
-        async with aiohttp.ClientSession(headers=HEADERS) as session:
-            async with session.get(url) as res:
-                if res.status != 200:
-                    return 0
-                data = await res.json()
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
+        async with session.get(url) as res:
+            if res.status != 200:
+                return 0
+            data = await res.json()
 
-        wars = data.get("globalData", {}).get("wars", 0)
-
-        WAR_CACHE[player] = {"wars": wars, "time": now}
-        return wars
-
-    except Exception as e:
-        print("fetch_guild_data error:", e)
-    return None
-
+    wars = data.get("globalData", {}).get("wars", 0)
+    WAR_CACHE[player] = {"wars": wars, "time": now}
+    return wars
 
 
 async def fetch_guild_data(prefix: str):
     now = time.time()
-
-    print("=== fetch_guild_data ===")
-    print("prefix:", repr(prefix))
+    prefix = prefix.strip()  # 空白のみ除去（大小文字は保持）
 
     if prefix in GUILD_CACHE and now - GUILD_CACHE[prefix]["time"] < CACHE_TIME:
-        print("cache hit")
         return GUILD_CACHE[prefix]["data"]
 
     url = f"https://api.wynncraft.com/v3/guild/prefix/{prefix}"
-    print("request:", url)
+    print("Guild API:", url)
 
-    try:
-        async with aiohttp.ClientSession(headers=HEADERS) as session:
-            async with session.get(url) as res:
-                print("HTTP status:", res.status)
-                if res.status != 200:
-                    print("❌ status not 200")
-                    return None
-                g = await res.json()
+    async with aiohttp.ClientSession(headers=HEADERS) as session:
+        async with session.get(url) as res:
+            print("HTTP status:", res.status)
+            if res.status != 200:
+                return None
+            g = await res.json()
 
-        print("response keys:", g.keys())
+    if not isinstance(g.get("members"), dict):
+        print("❌ members invalid:", g.get("members"))
+        return None
 
-        if "members" not in g:
-            print("❌ members not in response")
-            print("response body:", g)
-            return None
+    online_by_rank = {
+        "owner": [],
+        "chief": [],
+        "strategist": [],
+        "captain": [],
+        "recruiter": [],
+        "recruit": []
+    }
 
-        online_by_rank = {
-            "owner": [],
-            "chief": [],
-            "strategist": [],
-            "captain": [],
-            "recruiter": [],
-            "recruit": []
-        }
+    total = 0
+    online = 0
 
-        total = 0
-        online = 0
+    for rank, members in g["members"].items():
+        # ⭐ ここが超重要：dict 以外を完全スキップ
+        if not isinstance(members, dict):
+            continue
 
-        for rank, members in g["members"].items():
-            for name, data in members.items():
-                total += 1
-                if data.get("online"):
-                    online += 1
-                    online_by_rank[rank].append({
-                        "name": name,
-                        "server": data.get("server", "?")
-                    })
+        # 念のため未定義ランク対応
+        online_by_rank.setdefault(rank, [])
 
-        # 最大15人まで
-        online_list = [p for r in online_by_rank.values() for p in r][:15]
+        for name, data in members.items():
+            total += 1
+            if data.get("online"):
+                online += 1
+                online_by_rank[rank].append({
+                    "name": name,
+                    "server": data.get("server", "?")
+                })
 
-        wars_list = await asyncio.gather(
-            *(fetch_player_wars(p["name"]) for p in online_list)
-        )
+    # 最大15人まで
+    online_list = [p for r in online_by_rank.values() for p in r][:15]
 
-        i = 0
-        for rank in online_by_rank:
-            for p in online_by_rank[rank]:
-                if i < len(wars_list):
-                    p["wars"] = wars_list[i]
-                    i += 1
-                else:
-                    p["wars"] = 0
+    wars_list = await asyncio.gather(
+        *(fetch_player_wars(p["name"]) for p in online_list)
+    )
 
-        data = {
-            "g": g,
-            "onlineByRank": online_by_rank,
-            "onlineCount": online,
-            "totalMembers": total
-        }
+    i = 0
+    for rank in online_by_rank:
+        for p in online_by_rank[rank]:
+            p["wars"] = wars_list[i] if i < len(wars_list) else 0
+            i += 1
 
-        GUILD_CACHE[prefix] = {"data": data, "time": now}
-        return data
+    data = {
+        "g": g,
+        "onlineByRank": online_by_rank,
+        "onlineCount": online,
+        "totalMembers": total
+    }
 
-    except Exception as e:
-        print("fetch_guild_data error:", e)
-    return None
-
+    GUILD_CACHE[prefix] = {"data": data, "time": now}
+    return data
