@@ -31,8 +31,10 @@ async def fetch_player_wars(player: str) -> int:
         WAR_CACHE[player] = {"wars": wars, "time": now}
         return wars
 
-    except Exception:
-        return 0
+    except Exception as e:
+        print("fetch_guild_data error:", e)
+    return None
+
 
 
 async def fetch_guild_data(prefix: str):
@@ -101,5 +103,7 @@ async def fetch_guild_data(prefix: str):
         GUILD_CACHE[prefix] = {"data": data, "time": now}
         return data
 
-    except Exception:
-        return None
+    except Exception as e:
+        print("fetch_guild_data error:", e)
+    return None
+

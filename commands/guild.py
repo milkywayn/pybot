@@ -9,9 +9,14 @@ from utils.cache import fetch_guild_data
 )
 @app_commands.describe(prefix="Guild prefix")
 async def guild(interaction: discord.Interaction, prefix: str):
+
+    # 空白・改行だけ除去（大小文字は維持）
+    prefix = prefix.strip()
+
     await interaction.response.defer()
 
     cache = await fetch_guild_data(prefix)
+
     if not cache:
         await interaction.edit_original_response(content="❌ ギルド取得に失敗しました")
         return
