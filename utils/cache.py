@@ -40,20 +40,31 @@ async def fetch_player_wars(player: str) -> int:
 async def fetch_guild_data(prefix: str):
     now = time.time()
 
+    print("fetch_guild_data called with prefix:", repr(prefix))
+
     if prefix in GUILD_CACHE and now - GUILD_CACHE[prefix]["time"] < CACHE_TIME:
+        print("→ cache hit")
         return GUILD_CACHE[prefix]["data"]
 
     url = f"https://api.wynncraft.com/v3/guild/prefix/{prefix}"
+    print("request url:", url)
 
     try:
         async with aiohttp.ClientSession(headers=HEADERS) as session:
             async with session.get(url) as res:
+                print("status:", res.status)
                 if res.status != 200:
+                    print("❌ status not 200")
                     return None
                 g = await res.json()
 
+        print("guild keys:", g.keys())
+
         if "members" not in g:
+            print("❌ 'members' not in response")
+            print(g)
             return None
+
 
         online_by_rank = {
             "owner": [],
