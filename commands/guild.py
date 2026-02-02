@@ -40,7 +40,7 @@ async def guild(interaction: discord.Interaction, prefix: str):
 
         online_text += f"**{rank.upper()}**\n"
         for p in players:
-            wars = p.get("wars", 0)
+            wars = int(p.get("wars", 0))
             wars_text = f"**{wars:,} wars**" if wars >= 1000 else f"{wars} wars"
             online_text += f"`{p['name']}` ({p['server']} | {wars_text})\n"
         online_text += "\n"
