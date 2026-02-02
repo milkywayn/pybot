@@ -54,7 +54,7 @@ async def guild(interaction: discord.Interaction, prefix: str):
     )
 
     embed.add_field(name="<:crown:1467963602714624133> Owner", value=owner_text, inline=True)
-    embed.add_field(name="<:poteti:1467555934199873680> Level", value=f"{g['level']} [{g['xpPercent']}%]", inline=False)
+    embed.add_field(name="<:poteti:1467555934199873680> Level", value=f"{g['level']} [{g['xpPercent']}%]", inline=True)
     embed.add_field(name="<:territory:1467963411999494305> Territories", value=str(g["territories"]), inline=True)
     embed.add_field(name="⚔️ Wars", value=str(g["wars"]), inline=False),
     embed.add_field(name=f"🟢 Online Members : {online}/{total}", value=online_text)
