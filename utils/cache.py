@@ -1,4 +1,5 @@
 import time
+import asyncio
 import aiohttp
 
 GUILD_CACHE = {}
@@ -21,13 +22,16 @@ async def fetch_player_wars(player: str) -> int:
     try:
         async with aiohttp.ClientSession(headers=HEADERS) as session:
             async with session.get(url) as res:
+                if res.status != 200:
+                    return 0
                 data = await res.json()
-                wars = data.get("globalData", {}).get("wars", 0)
+
+        wars = data.get("globalData", {}).get("wars", 0)
 
         WAR_CACHE[player] = {"wars": wars, "time": now}
         return wars
 
-    except:
+    except Exception:
         return 0
 
 
@@ -42,6 +46,8 @@ async def fetch_guild_data(prefix: str):
     try:
         async with aiohttp.ClientSession(headers=HEADERS) as session:
             async with session.get(url) as res:
+                if res.status != 200:
+                    return None
                 g = await res.json()
 
         if "members" not in g:
@@ -69,17 +75,21 @@ async def fetch_guild_data(prefix: str):
                         "server": data.get("server", "?")
                     })
 
+        # 最大15人まで
         online_list = [p for r in online_by_rank.values() for p in r][:15]
 
         wars_list = await asyncio.gather(
-            *[fetch_player_wars(p["name"]) for p in online_list]
+            *(fetch_player_wars(p["name"]) for p in online_list)
         )
 
         i = 0
         for rank in online_by_rank:
             for p in online_by_rank[rank]:
-                p["wars"] = wars_list[i]
-                i += 1
+                if i < len(wars_list):
+                    p["wars"] = wars_list[i]
+                    i += 1
+                else:
+                    p["wars"] = 0
 
         data = {
             "g": g,
@@ -91,5 +101,5 @@ async def fetch_guild_data(prefix: str):
         GUILD_CACHE[prefix] = {"data": data, "time": now}
         return data
 
-    except:
+    except Exception:
         return None
