@@ -18,7 +18,7 @@ async def guild(interaction: discord.Interaction, prefix: str):
     cache = await fetch_guild_data(prefix)
 
     if not cache:
-        await interaction.edit_original_response(content="❌ ギルド取得に失敗しました2")
+        await interaction.edit_original_response(content="❌ ギルド取得に失敗しました")
         return
 
     g = cache["g"]
