@@ -40,7 +40,7 @@ async def guild(interaction: discord.Interaction, prefix: str):
 
         online_text += f"**{rank.upper()}**\n"
         for p in players:
-            wars = (p.get("wars:,", 0))
+            wars = (p.get("wars", 0))
             wars_text = f"**{wars:,} wars**" if wars >= 1000 else f"{wars} wars"
             online_text += f"`{p['name']}` ({p['server']} | {wars_text})\n"
         online_text += "\n"
@@ -57,7 +57,7 @@ async def guild(interaction: discord.Interaction, prefix: str):
     embed.add_field(name="<:poteti:1467555934199873680> Level", value=f"{g['level']} [{g['xpPercent']}%]", inline=True)
     embed.add_field(name="\u200b", value="\u200b", inline=True) # ダミー（行揃え用）
     embed.add_field(name="<:territory:1467963411999494305> Territories", value=str(g["territories"]), inline=True)
-    embed.add_field(name="⚔️ Wars", value=str(g["wars"]), inline=True),
+    embed.add_field(name="⚔️ Wars", value=(g["wars"]), inline=True),
     embed.add_field(name="\u200b", value="\u200b", inline=True) # ダミー（行揃え用）
     embed.add_field(name=f"🟢 Online Members : {online}/{total}", value=online_text)
 
