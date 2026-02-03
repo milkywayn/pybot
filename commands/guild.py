@@ -58,6 +58,7 @@ async def guild(interaction: discord.Interaction, prefix: str):
     embed.add_field(name="\u200b", value="\u200b", inline=True) # ダミー（行揃え用）
     embed.add_field(name="<:territory:1467963411999494305> Territories", value=str(g["territories"]), inline=True)
     embed.add_field(name="⚔️ Wars", value=str(g["wars"]), inline=True),
+    embed.add_field(name="\u200b", value="\u200b", inline=True) # ダミー（行揃え用）
     embed.add_field(name=f"🟢 Online Members : {online}/{total}", value=online_text)
 
     embed.set_footer(text="Data from Wynncraft API")
